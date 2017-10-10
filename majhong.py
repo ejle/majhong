@@ -1,6 +1,8 @@
 import random as rnd
 import itertools as it
 
+# stuff
+
 BAMBOO = 0
 DOTS = 1
 CHARACTER = 2
