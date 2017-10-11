@@ -1,5 +1,6 @@
 import random as rnd
 import itertools as it
+import copy
 
 # stuff
 
@@ -173,8 +174,8 @@ class Mahjong:
         rnd.shuffle(self.game['deck'])
 
         for p in PLAYERS:
-            self.game['player'][p] = self.game['deck'][0:12]
-            self.game['deck'] = self.game['deck'][12:]
+            self.game['player'][p] = self.game['deck'][0:13]
+            self.game['deck'] = self.game['deck'][13:]
 
 
         print("game start") 
@@ -201,6 +202,83 @@ class Mahjong:
 
         self.activePlayer = self.activePlayer % 4 + 1
 
+    def isWining(self):
+        hand = self.game['player'][self.activePlayer]
+        sols = self.findeyes(hand)
+        return (sols != [])
+    
+
+
+    def findeyes(self, hand):
+        # eyes = [ ]
+        solutions = []
+        # hand = self.game['player'][self,activePlayer]
+        # look for all pair
+        # self.printTiles(hand)
+        for tile in hand: 
+            eyes_index = [i for i,t in enumerate(hand) if t == tile]
+            # print (eyes_index)
+            if len(eyes_index) >= 2: 
+                h_temp = copy.copy(hand)
+                for i in xrange(0,2):
+                    h_temp.remove(tile)   
+
+                tps = self.findtriples(h_temp)
+                if tps != []:
+                    solutions = solutions + [l + [tile, tile] for l in tps]
+
+        return solutions
+
+    def findtriples(self, hand):
+        # if triples_needed <= 0:
+        #     return []
+        solutions = []
+        for tile in hand:
+            triple_index = [ i for i,t in enumerate(hand) if t == tile]
+            if len(triple_index) >= 3:
+                triple = [tile,tile,tile]
+                h_temp = copy.copy(hand)
+                for i in range(0,3):
+                    h_temp.remove(tile)
+                    
+                tps = self.findtriples(h_temp)
+
+                if len(hand) == 3: # kongs will be different here
+                    solutions = [triple]
+                elif tps != []:
+                    # print(">>")
+                    # print tps
+                    # print triple
+                    solutions = solutions + [l + triple for l in tps]          
+        
+        # if foundTriples == False:
+        # find increasing
+        for tile in hand:
+            (num, suite) = tile
+            if suite != HONOR:
+                below_index = [i for i,(n,s) in enumerate(hand) if (s == suite and n == num - 1)] 
+                above_index = [i for i,(n,s) in enumerate(hand) if (s == suite and n == num + 1)]
+                if (len(below_index) >= 1 & len(above_index) >= 1):
+                    tile_below = hand[below_index[0]]
+                    tile_above = hand[above_index[0]]
+
+                    increasing = [tile_below, tile, tile_above]
+                    h_temp = copy.copy(hand)
+
+                    h_temp.remove(tile_below)
+                    h_temp.remove(tile)
+                    h_temp.remove(tile_above)
+                    
+                    tps = self.findtriples(h_temp)
+
+                    if len(hand) == 3: # kongs will be different here
+                        solutions = [increasing]
+                    elif tps != []:
+                        solutions = solutions + [l + increasing for l in tps]    
+
+        return solutions
+        
+
 
 
 if __name__ == "__main__":
@@ -212,23 +290,51 @@ if __name__ == "__main__":
     while(not game.isGameOver()):
         tile = game.drawTile()
         game.printGame()
-        # game.printGameCheat()
+        # # game.printGameCheat()
 
         ap = game.getActivePlayer()
-        print("you are player: " + str(ap))
+        # print("you are player: " + str(ap))
 
         hand = game.getPlayerHand()
-        n = len(hand)
+        # n = len(hand)
+        print("is winning?")
+        print(game.isWining())
+        # tilenum = 0
+        # while (tilenum <= 0 or tilenum > n):
+        #     print("Enter a number between 1 and " + str(n))
+        #     # game.printHand(hand)
+        #     tilenum = input()
         
-        tilenum = 0
-        while (tilenum <= 0 or tilenum > n):
-            print("Enter a number between 1 and " + str(n))
-            # game.printHand(hand)
-            tilenum = input()
-        
+        tilenum = 1
         tile = hand[tilenum - 1]
         game.throwTile(tile)
+        
 
+    print("testing:")
+
+    hand = [
+        (1, BAMBOO),
+        (2, BAMBOO),
+        (3, BAMBOO),
+
+        (3, BAMBOO),
+        (2, BAMBOO),
+        (4, BAMBOO),
+
+        (4, BAMBOO),
+        (4, BAMBOO),
+        (4, BAMBOO),
+
+        (6, BAMBOO),
+        (5, BAMBOO),
+        (7, BAMBOO),
+
+        (8, BAMBOO),
+        (8, BAMBOO),
+        ]
+
+    s = game.findeyes(hand)
+    print(s)
         # break
 
 
